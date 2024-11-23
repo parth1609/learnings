@@ -22,12 +22,26 @@ const App = () => {
     e.preventDefault();
     const newobj = {
       id: String(persons.length + 1),
-      name: newName,
+      name: newName.trim(),
       number: newNumber
     };
 
-    if (persons.some((person) => person.name === newName.trim())) {
-      alert(`${newName} is already added to phonebook`);
+    const existingperson = persons.find(person => person.name === newName.trim());
+
+    if (existingperson) {
+      const replaceNumber = window.confirm(`${existingperson.name} is already in phonebook. Replace new phone number with new one`)
+      if (replaceNumber) {
+        axios
+          .put(`http://localhost:3001/phonebook/${existingperson.id}`, newobj)
+            .then(response => {
+              setPersons(persons.map(person => person.id === existingperson.id ? { ...person, number: newNumber } : person));
+              setNewName("");
+              setNewNumber("");
+            })
+            .catch(error => {
+              console.log("error while updating phonebook: ", error)
+            });
+      }
     } else {
       axios
         .post('http://localhost:3001/phonebook', newobj)
@@ -62,12 +76,12 @@ const App = () => {
       axios
         .delete(`http://localhost:3001/phonebook/${id}`)
         .then(() => {
-          console.log(`deleted peroson with id = ${id}`)
+          // console.log(`deleted peroson with id = ${id}`)
           setPersons(persons.filter((p) => p.id !== id))
         })
         .catch((error) => {
           alert(`The Person ${person.name} is already deleted`)
-          console.log(`the Person already existed with id = ${id}`)
+          // console.log(`the Person already existed with id = ${id}`)
           setPersons(persons.filter((p) => p.id !== id))
         });
     }
